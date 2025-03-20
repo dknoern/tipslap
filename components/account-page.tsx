@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, Edit, LogOut } from "lucide-react"
+import { QRCodeSVG } from "qrcode.react"
 
 interface User {
   name?: string | null
@@ -67,7 +68,13 @@ export default function AccountPage({
               <h3 className="text-sm font-medium text-muted-foreground mb-1">QR Code</h3>
               <div className="flex justify-center my-4">
                 <div className="bg-white p-4 rounded-lg">
-                  <img src="/placeholder.svg?height=150&width=150" alt="QR Code" className="h-[150px] w-[150px]" />
+                  <QRCodeSVG
+                    value={user?.email || "email@example.com"}
+                    size={150}
+                    level="H"
+                    includeMargin={true}
+                    className="h-[150px] w-[150px]"
+                  />
                 </div>
               </div>
               <p className="text-sm text-center text-muted-foreground">Share this QR code to receive tips</p>
