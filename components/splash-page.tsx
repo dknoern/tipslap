@@ -25,7 +25,7 @@ export default function SplashPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col items-center justify-center space-y-2">
-                <img src="/placeholder.svg?height=200&width=200" alt="TipSlap Logo" className="h-32 w-32 rounded-full" />
+                <img src="/whale.png?height=200&width=200" alt="TipSlap Logo" className="h-32 w-32 rounded-full" />
                 <p className="text-center text-sm text-muted-foreground">
                   Easily tip valets, bellhops, and other service workers
                 </p>
