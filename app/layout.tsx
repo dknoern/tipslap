@@ -9,7 +9,10 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "TipSlap - Digital Tipping App",
   description: "Easily tip service workers with just a few taps",
-    generator: 'v0.dev'
+  generator: 'v0.dev',
+  icons: {
+    icon: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({
