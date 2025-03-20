@@ -31,7 +31,7 @@ export default function HomePage({
         <div className="container flex h-14 items-center">
           <div className="mr-4 flex">
             <div className="flex items-center space-x-2">
-              <span className="font-bold">TipTap</span>
+              <span className="font-bold">TipSlap</span>
             </div>
           </div>
           <div className="ml-auto flex items-center">

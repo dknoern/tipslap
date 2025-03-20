@@ -57,7 +57,7 @@ export default function PaymentPage({ navigateTo }: { navigateTo: (page: string)
         <Card className="max-w-md mx-auto">
           <CardHeader>
             <CardTitle className="text-lg">Add Funds</CardTitle>
-            <CardDescription>Add money to your TipTap balance</CardDescription>
+            <CardDescription>Add money to your TipSlap balance</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-2">

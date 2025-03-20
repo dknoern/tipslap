@@ -7,7 +7,7 @@ import { Providers } from "@/components/providers"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "TipTap - Digital Tipping App",
+  title: "TipSlap - Digital Tipping App",
   description: "Easily tip service workers with just a few taps",
     generator: 'v0.dev'
 }
