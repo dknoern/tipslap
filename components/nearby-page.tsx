@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -8,52 +8,34 @@ import { Input } from "@/components/ui/input"
 import { ArrowLeft, QrCode, Search, MapPin } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-// Mock data for nearby workers
-const nearbyWorkers = [
-  {
-    id: "1",
-    name: "Michael Torres",
-    role: "Valet",
-    distance: "15ft away",
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "MT",
-  },
-  {
-    id: "2",
-    name: "Sarah Johnson",
-    role: "Bellhop",
-    distance: "30ft away",
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "SJ",
-  },
-  {
-    id: "3",
-    name: "David Chen",
-    role: "Server",
-    distance: "50ft away",
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "DC",
-  },
-  {
-    id: "4",
-    name: "Aisha Williams",
-    role: "Concierge",
-    distance: "60ft away",
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "AW",
-  },
-  {
-    id: "5",
-    name: "Robert Garcia",
-    role: "Doorman",
-    distance: "75ft away",
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "RG",
-  },
-]
+interface Worker {
+  _id: string
+  name: string
+  role: string
+  avatar?: string
+  initials?: string
+}
 
 export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, workerId?: string) => void }) {
   const [searchQuery, setSearchQuery] = useState("")
+  const [workers, setWorkers] = useState<Worker[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchWorkers = async () => {
+      try {
+        const response = await fetch('/api/workers')
+        const data = await response.json()
+        setWorkers(data)
+      } catch (error) {
+        console.error('Error fetching workers:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchWorkers()
+  }, [])
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -88,28 +70,34 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground text-center mb-4">Service workers near your location</p>
 
-              {nearbyWorkers.map((worker) => (
-                <div key={worker.id} onClick={() => navigateTo("tip", worker.id)}>
-                  <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-4">
-                        <Avatar>
-                          <AvatarImage src={worker.avatar} alt={worker.name} />
-                          <AvatarFallback>{worker.initials}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <h3 className="font-medium">{worker.name}</h3>
-                          <p className="text-sm text-muted-foreground">{worker.role}</p>
+              {loading ? (
+                <p className="text-center text-muted-foreground">Loading workers...</p>
+              ) : workers.length === 0 ? (
+                <p className="text-center text-muted-foreground">No workers found nearby</p>
+              ) : (
+                workers.map((worker) => (
+                  <div key={worker._id} onClick={() => navigateTo("tip", worker._id)}>
+                    <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-4">
+                          <Avatar>
+                            <AvatarImage src={worker.avatar || "/placeholder.svg?height=40&width=40"} alt={worker.name} />
+                            <AvatarFallback>{worker.initials || worker.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <h3 className="font-medium">{worker.name}</h3>
+                            <p className="text-sm text-muted-foreground">{worker.role}</p>
+                          </div>
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            Within 50 ft id: {worker._id}
+                          </div>
                         </div>
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          {worker.distance}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              ))}
+                      </CardContent>
+                    </Card>
+                  </div>
+                ))
+              )}
             </div>
           </TabsContent>
 
