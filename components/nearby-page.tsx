@@ -90,7 +90,7 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
                           </div>
                           <div className="flex items-center text-sm text-muted-foreground">
                             <MapPin className="h-3 w-3 mr-1" />
-                            Within 50 ft id: {worker._id}
+                            Within 50 ft
                           </div>
                         </div>
                       </CardContent>
