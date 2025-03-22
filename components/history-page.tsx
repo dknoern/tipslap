@@ -3,15 +3,41 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, ArrowDown, ArrowUp, Filter } from "lucide-react"
+import { useEffect, useState } from "react"
+
+interface Transaction {
+  id: string
+  type: "tip" | "promo" | "received" | "sent"
+  payeeName: string
+  payerName: string
+  payeeUsername: string
+  payerUsername: string
+  amount: number
+  date: string
+}
 
 export default function HistoryPage({ navigateTo }: { navigateTo: (page: string) => void }) {
-  const transactions = [
-    { id: 1, type: "received", name: "Alex Johnson", username: "@alexj", amount: 15.0, date: "2023-03-19" },
-    { id: 2, type: "sent", name: "Maria Garcia", username: "@mgarcia", amount: 10.0, date: "2023-03-18" },
-    { id: 3, type: "received", name: "David Kim", username: "@dkim", amount: 20.0, date: "2023-03-17" },
-    { id: 4, type: "sent", name: "Sarah Williams", username: "@swilliams", amount: 5.0, date: "2023-03-15" },
-    { id: 5, type: "received", name: "James Brown", username: "@jbrown", amount: 12.5, date: "2023-03-14" },
-  ]
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const response = await fetch('/api/transactions')
+        if (!response.ok) throw new Error('Failed to fetch transactions')
+        const data = await response.json()
+        setTransactions(data)
+      } catch (error) {
+        console.error("Error fetching transactions:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchTransactions()
+  }, [])
+
+  const isReceivedTransaction = (type: Transaction["type"]) => type === "promo"
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -34,37 +60,42 @@ export default function HistoryPage({ navigateTo }: { navigateTo: (page: string)
             <CardTitle className="text-lg">Recent Transactions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {transactions.map((transaction) => (
-              <div key={transaction.id} className="flex items-center gap-4 py-2">
-                <div className={`rounded-full p-2 ${transaction.type === "received" ? "bg-green-100" : "bg-red-100"}`}>
-                  {transaction.type === "received" ? (
-                    <ArrowDown
-                      className={`h-4 w-4 ${transaction.type === "received" ? "text-green-600" : "text-red-600"}`}
-                    />
-                  ) : (
-                    <ArrowUp
-                      className={`h-4 w-4 ${transaction.type === "received" ? "text-green-600" : "text-red-600"}`}
-                    />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between">
-                    <div>
-                      <p className="font-medium">{transaction.name}</p>
-                      <p className="text-xs text-muted-foreground">{transaction.username}</p>
+            {loading ? (
+              <div className="text-center py-4">Loading transactions...</div>
+            ) : transactions.length === 0 ? (
+              <div className="text-center py-4">No transactions found</div>
+            ) : (
+              transactions.map((transaction) => {
+                const isReceived = isReceivedTransaction(transaction.type)
+                return (
+                  <div key={transaction.id} className="flex items-center gap-4 py-2">
+                    <div className={`rounded-full p-2 ${isReceived ? "bg-green-100" : "bg-red-100"}`}>
+                      {isReceived ? (
+                        <ArrowDown className={`h-4 w-4 ${isReceived ? "text-green-600" : "text-red-600"}`} />
+                      ) : (
+                        <ArrowUp className={`h-4 w-4 ${isReceived ? "text-green-600" : "text-red-600"}`} />
+                      )}
                     </div>
-                    <div className="text-right">
-                      <p
-                        className={`font-medium ${transaction.type === "received" ? "text-green-600" : "text-red-600"}`}
-                      >
-                        {transaction.type === "received" ? "+" : "-"}${transaction.amount.toFixed(2)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{transaction.date}</p>
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <div>
+                          <p className="font-medium">{transaction.type === "promo" ? "Sign Up Promo" : transaction.payeeName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {transaction.type === "promo" ? transaction.payerUsername : transaction.payeeUsername}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className={`font-medium ${isReceived ? "text-green-600" : "text-red-600"}`}>
+                            {isReceived ? "+" : "-"}${transaction.amount.toFixed(2)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{transaction.date}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                )
+              })
+            )}
           </CardContent>
         </Card>
       </main>
