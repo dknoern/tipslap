@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight, CreditCard, History, User } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { getUserDetails } from "@/app/actions/user"
+import { useEffect, useState } from "react"
 
 interface UserProps {
   name?: string | null
@@ -18,6 +20,18 @@ export default function HomePage({
   navigateTo: (page: string) => void
   user?: UserProps | null
 }) {
+  const [userDetails, setUserDetails] = useState<any>(null)
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      if (user?.email) {
+        const details = await getUserDetails(user.email)
+        setUserDetails(details)
+      }
+    }
+    fetchUserDetails()
+  }, [user?.email])
+
   const userInitials = user?.name
     ? user.name
         .split(" ")
