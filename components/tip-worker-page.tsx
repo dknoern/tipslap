@@ -147,20 +147,20 @@ export default function TipWorkerPage({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-3 gap-2">
+              <Button variant="outline" className="h-16" onClick={() => setAmount("1")}>
+                $1
+              </Button>
+              <Button variant="outline" className="h-16" onClick={() => setAmount("2")}>
+                $2
+              </Button>
               <Button variant="outline" className="h-16" onClick={() => setAmount("5")}>
                 $5
               </Button>
               <Button variant="outline" className="h-16" onClick={() => setAmount("10")}>
                 $10
               </Button>
-              <Button variant="outline" className="h-16" onClick={() => setAmount("15")}>
-                $15
-              </Button>
               <Button variant="outline" className="h-16" onClick={() => setAmount("20")}>
                 $20
-              </Button>
-              <Button variant="outline" className="h-16" onClick={() => setAmount("25")}>
-                $25
               </Button>
               <Button variant="outline" className="h-16" onClick={() => setAmount("0")}>
                 Custom

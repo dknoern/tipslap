@@ -33,6 +33,7 @@ export async function getUserDetails(email: string) {
             name: user.name,
             image: user.image,
             joinedAt: new Date(),
+            balance: 10.00,
             role: 'user',
         })
         userDetails = await db.collection('users').findOne({ _id: result.insertedId })
@@ -48,5 +49,6 @@ export async function getUserDetails(email: string) {
         email: userDetails.email,
         image: userDetails.image,
         role: userDetails.role,
+        balance: userDetails.balance,
     }
 } 
