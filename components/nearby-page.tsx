@@ -12,7 +12,7 @@ interface Worker {
   _id: string
   name: string
   role: string
-  avatar?: string
+  image?: string
   initials?: string
 }
 
@@ -81,7 +81,7 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
                       <CardContent className="p-4">
                         <div className="flex items-center gap-4">
                           <Avatar>
-                            <AvatarImage src={worker.avatar || "/placeholder.svg?height=40&width=40"} alt={worker.name} />
+                            <AvatarImage src={worker.image || "/placeholder.svg?height=40&width=40"} alt={worker.name} />
                             <AvatarFallback>{worker.initials || worker.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                           </Avatar>
                           <div className="flex-1">

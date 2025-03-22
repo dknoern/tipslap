@@ -23,10 +23,6 @@ export async function submitTip(workerId: string, amount: number, note?: string)
 
     // lookup worker by email
 
-
-
-
-
     console.log("+++++user", user)
     console.log("tipping worker id", workerId)
     if (!user.email) {
@@ -47,7 +43,7 @@ export async function submitTip(workerId: string, amount: number, note?: string)
     
     // Get worker details
 
-    
+
     if (!tipper) {
       throw new Error('Tipper not found')
     }
@@ -64,13 +60,16 @@ export async function submitTip(workerId: string, amount: number, note?: string)
     const tip = {
       payerId: new ObjectId(tipper._id),
       payerName: tipper.name,
+      payerImage: tipper.image,
       amount,
       note,
-      createdAt: new Date(),
+      date: new Date(),
       status: 'completed',
       payeeId: tippee._id,
       payeeName: tippee.name,
       payeeEmail: tippee.email,
+      payeeImage: tippee.image,
+      payeeRole: tippee.role,
     }
 
     // Insert tip into database

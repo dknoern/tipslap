@@ -13,7 +13,7 @@ interface Worker {
   _id: string
   name: string
   role: string
-  avatar?: string
+  image?: string
   initials?: string
   rating?: number
 }
@@ -131,7 +131,7 @@ export default function TipWorkerPage({
         <Card className="max-w-md mx-auto">
           <CardHeader className="flex flex-col items-center text-center">
             <Avatar className="h-24 w-24 mb-2">
-              <AvatarImage src={worker.avatar || "/placeholder.svg?height=80&width=80"} alt={worker.name} />
+              <AvatarImage src={worker.image || "/placeholder.svg?height=80&width=80"} alt={worker.name} />
               <AvatarFallback className="text-2xl">{worker.initials || worker.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
             </Avatar>
             <div>

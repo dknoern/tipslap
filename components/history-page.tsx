@@ -1,7 +1,9 @@
 "use client"
 
+import { getTransactions } from "@/app/actions/transactions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, ArrowDown, ArrowUp, Filter } from "lucide-react"
 import { useEffect, useState } from "react"
 
@@ -14,21 +16,23 @@ interface Transaction {
   payerUsername: string
   amount: number
   date: string
+  payeeImage: string
+  payerImage: string
+  payeeRole: string
 }
 
 export default function HistoryPage({ navigateTo }: { navigateTo: (page: string) => void }) {
-  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
+  const [transactions, setTransactions] = useState<Transaction[]>([])
 
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const response = await fetch('/api/transactions')
-        if (!response.ok) throw new Error('Failed to fetch transactions')
-        const data = await response.json()
-        setTransactions(data)
+        const data = await getTransactions()
+        console.log("transactions", data)
+        setTransactions(data as Transaction[])
       } catch (error) {
-        console.error("Error fetching transactions:", error)
+        console.error('Error fetching transactions:', error)
       } finally {
         setLoading(false)
       }
@@ -69,19 +73,18 @@ export default function HistoryPage({ navigateTo }: { navigateTo: (page: string)
                 const isReceived = isReceivedTransaction(transaction.type)
                 return (
                   <div key={transaction.id} className="flex items-center gap-4 py-2">
-                    <div className={`rounded-full p-2 ${isReceived ? "bg-green-100" : "bg-red-100"}`}>
-                      {isReceived ? (
-                        <ArrowDown className={`h-4 w-4 ${isReceived ? "text-green-600" : "text-red-600"}`} />
-                      ) : (
-                        <ArrowUp className={`h-4 w-4 ${isReceived ? "text-green-600" : "text-red-600"}`} />
-                      )}
+                    <div>
+                      <Avatar>
+                        <AvatarImage src={transaction.payeeImage} alt={transaction.payeeName} />
+                        <AvatarFallback>{transaction.payeeName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                      </Avatar>
                     </div>
                     <div className="flex-1">
                       <div className="flex justify-between">
                         <div>
                           <p className="font-medium">{transaction.type === "promo" ? "Sign Up Promo" : transaction.payeeName}</p>
                           <p className="text-xs text-muted-foreground">
-                            {transaction.type === "promo" ? transaction.payerUsername : transaction.payeeUsername}
+                            {transaction.payeeRole}
                           </p>
                         </div>
                         <div className="text-right">

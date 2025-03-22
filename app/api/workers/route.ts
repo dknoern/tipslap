@@ -11,6 +11,8 @@ export async function GET() {
       .find({ type: 'worker' })
       .limit(5)
       .toArray()
+
+       console.log("workers", workers)
     
     return NextResponse.json(workers)
   } catch (error) {
