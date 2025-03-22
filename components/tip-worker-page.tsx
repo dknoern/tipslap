@@ -6,6 +6,8 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { ArrowLeft, Star } from "lucide-react"
+import { submitTip } from "@/app/actions/tips"
+import { useToast } from "@/components/ui/use-toast"
 
 interface Worker {
   _id: string
@@ -28,6 +30,8 @@ export default function TipWorkerPage({
   const [worker, setWorker] = useState<Worker | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     const fetchWorker = async () => {
@@ -53,6 +57,29 @@ export default function TipWorkerPage({
 
     fetchWorker()
   }, [workerId])
+
+  const handleSubmitTip = async () => {
+    if (!worker || !amount || amount === "0") return
+
+    setSubmitting(true)
+    try {
+      await submitTip(worker._id, parseFloat(amount), note)
+      toast({
+        title: "Tip sent successfully!",
+        description: `Your tip of $${amount} has been sent to ${worker.name}`,
+      })
+      navigateTo("home")
+    } catch (error) {
+      console.error('Error submitting tip:', error)
+      toast({
+        title: "Error",
+        description: "Failed to send tip. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -160,13 +187,15 @@ export default function TipWorkerPage({
             <Button
               className="w-full"
               size="lg"
-              disabled={!amount || amount === "0"}
+              disabled={!amount || amount === "0" || submitting}
+
               onClick={() => {
+                handleSubmitTip()
                 alert(`Tip of $${amount} sent to ${worker.name}!`)
                 navigateTo("home")
               }}
             >
-              Send ${amount !== "0" ? amount : ""} Tip
+              {submitting ? "Sending..." : `Send $${amount !== "0" ? amount : ""} Tip`}
             </Button>
           </CardFooter>
         </Card>
