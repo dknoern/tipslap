@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, QrCode, Search, MapPin } from "lucide-react"
+import { ArrowLeft, QrCode, Search, MapPin, Camera } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import debounce from 'lodash/debounce'
 import { QrReader } from 'react-qr-reader'
@@ -26,6 +26,7 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
   const [loading, setLoading] = useState(true)
   const [searchResults, setSearchResults] = useState<Worker[]>([])
   const [showScanner, setShowScanner] = useState(false)
+  const [cameraPermission, setCameraPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt')
   const { toast } = useToast()
 
   useEffect(() => {
@@ -115,6 +116,43 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
       variant: "destructive",
     })
   }
+
+  const checkCameraPermission = async () => {
+    try {
+      const result = await navigator.permissions.query({ name: 'camera' as PermissionName })
+      setCameraPermission(result.state)
+      
+      result.addEventListener('change', () => {
+        setCameraPermission(result.state)
+      })
+    } catch (error) {
+      console.error('Error checking camera permission:', error)
+      setCameraPermission('denied')
+    }
+  }
+
+  const requestCameraPermission = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+      stream.getTracks().forEach(track => track.stop())
+      setCameraPermission('granted')
+      setShowScanner(true)
+    } catch (error) {
+      console.error('Error requesting camera permission:', error)
+      setCameraPermission('denied')
+      toast({
+        title: "Camera Permission Required",
+        description: "Please enable camera access in your browser settings to scan QR codes.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  useEffect(() => {
+    if (showScanner) {
+      checkCameraPermission()
+    }
+  }, [showScanner])
 
   const renderWorkerList = (workers: Worker[]) => {
     if (loading) {
@@ -215,34 +253,58 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
             <div className="space-y-4">
               {showScanner ? (
                 <div className="relative w-full max-w-md mx-auto aspect-square bg-black rounded-lg overflow-hidden">
-                  <div className="absolute inset-0">
-                    <QrReader
-                      constraints={{ facingMode: 'environment' }}
-                      onResult={(result, error) => {
-                        if (result) {
-                          handleScan(result.getText())
-                        }
-                        if (error) {
-                          handleError(error)
-                        }
-                      }}
-                      className="w-full h-full"
-                      videoId="qr-video"
-                    />
-                  </div>
-                  <Button
-                    variant="outline"
-                    className="absolute top-4 right-4 z-10"
-                    onClick={() => setShowScanner(false)}
-                  >
-                    Close Camera
-                  </Button>
+                  {cameraPermission === 'granted' ? (
+                    <>
+                      <div className="absolute inset-0">
+                        <QrReader
+                          constraints={{ facingMode: 'environment' }}
+                          onResult={(result, error) => {
+                            if (result) {
+                              handleScan(result.getText())
+                            }
+                            if (error) {
+                              handleError(error)
+                            }
+                          }}
+                          className="w-full h-full"
+                          videoId="qr-video"
+                        />
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="absolute top-4 right-4 z-10"
+                        onClick={() => setShowScanner(false)}
+                      >
+                        Close Camera
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
+                      <Camera className="h-12 w-12 text-muted-foreground mb-4" />
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {cameraPermission === 'denied' 
+                          ? "Camera access is blocked. Please enable it in your browser settings."
+                          : "Please allow camera access to scan QR codes."}
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        onClick={requestCameraPermission}
+                        disabled={cameraPermission === 'denied'}
+                      >
+                        Allow Camera Access
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg">
                   <QrCode className="h-12 w-12 text-muted-foreground mb-4" />
                   <p className="text-sm text-muted-foreground">Scan a service worker's QR code</p>
-                  <Button variant="outline" className="mt-4" onClick={() => setShowScanner(true)}>
+                  <Button 
+                    variant="outline" 
+                    className="mt-4" 
+                    onClick={() => setShowScanner(true)}
+                  >
                     Open Camera
                   </Button>
                 </div>
