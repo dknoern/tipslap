@@ -14,6 +14,7 @@ frontend:
         - echo "MONGODB_URI=$MONGODB_URI" >> .env
         - echo "STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY" >> .env
         - echo "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY" >> .env
+        - echo "STRIPE_WEBHOOK_SECRET=$STRIPE_WEBHOOK_SECRET" >> .env
         - npm run build
   artifacts:
     baseDirectory: .next
