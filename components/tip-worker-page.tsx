@@ -15,6 +15,7 @@ interface Worker {
   role: string
   image?: string
   initials?: string
+  alias?: string
   rating?: number
 }
 
@@ -136,7 +137,7 @@ export default function TipWorkerPage({
             </Avatar>
             <div>
               <h1 className="text-2xl font-bold">{worker.name}</h1>
-              <p className="text-muted-foreground">{worker.role}</p>
+              <p className="text-muted-foreground">{worker.alias}</p>
               {worker.rating && (
                 <div className="flex items-center justify-center mt-1">
                   <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
