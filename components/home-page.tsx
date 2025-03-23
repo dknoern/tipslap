@@ -74,7 +74,7 @@ export default function HomePage({
             <CardContent className="pt-6">
               <div className="text-center mb-6">
                 <p className="text-sm text-muted-foreground">Your Balance</p>
-                <h2 className="text-4xl font-bold">${userDetails?.balance?.toFixed(2) || '0.00'}</h2>
+                <h2 className="text-4xl font-bold">${userDetails?.balance?.toFixed(2) || '...'}</h2>
               </div>
 
               <Button className="w-full h-14 text-lg" size="lg" onClick={() => navigateTo("nearby")}>
