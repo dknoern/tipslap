@@ -32,11 +32,30 @@ export async function getUserDetails(email: string) {
             email: user.email,
             name: user.name,
             image: user.image,
-            joinedAt: new Date(),
+            joined: new Date(),
             balance: 10.00,
             role: 'user',
+            alias: '@' + (user.email?.split('@')[0] || ''),
+           
         })
+
+        result.insertedId
         userDetails = await db.collection('users').findOne({ _id: result.insertedId })
+
+        // create new transaction for user
+        await db.collection('transactions').insertOne({
+            payeeName: 'TipSlap',
+            payeeImage: '/whale.png',
+            payeeId: userDetails?._id,
+            payeeAlias: '@tipslap',
+            payerName: 'TipSlap',
+            payerImage: '/whale.png',
+            payerId:  userDetails?._id,
+            payerAlias: '@tipslap',
+            amount: 10.00,
+            type: 'promo',
+            date: new Date(),
+        })
     }
 
     if (!userDetails) {

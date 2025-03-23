@@ -61,11 +61,37 @@ export async function POST(req: Request) {
       const db = client.db()
       const users = db.collection("users")
 
+
+      const userDetails2 = await users.findOne({ _id: new ObjectId(userId) })
+      console.log("userDetails2", userDetails2)
+      console.log("adding to balance", userId, amount)
       // Update user's balance using $inc operator
       const result = await users.updateOne(
         { _id: new ObjectId(userId) },
         { $inc: { balance: amount } }
       )
+
+      const userDetails = await users.findOne({ _id: new ObjectId(userId) })
+
+
+      console.log("userDetails again", userDetails)
+
+
+
+
+      await db.collection('transactions').insertOne({
+        payeeName: "Funds Added",
+        payeeImage: userDetails?.image,
+        payeeId: userDetails?._id,
+        payeeAlias: userDetails?.alias,
+        payerName: userDetails?.name,
+        payerImage: userDetails?.image,
+        payerId: userDetails?._id,
+        payerAlias: userDetails?.alias,
+        amount: amount,
+        type: 'funding',
+        date: new Date(),
+    })
 
       console.log("Database update result:", result)
       console.log(`Added $${amount} to user ${userId}'s balance`)

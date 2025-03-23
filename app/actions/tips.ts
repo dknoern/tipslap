@@ -17,6 +17,7 @@ interface Tip {
   payerId: ObjectId
   payerName: string
   payerImage: string | null
+  payerAlias: string
   amount: number
   note?: string
   date: Date
@@ -26,6 +27,7 @@ interface Tip {
   payeeEmail: string
   payeeImage: string | null
   payeeRole: string
+  payeeAlias: string
   type: string
 }
 
@@ -80,6 +82,7 @@ export async function submitTip(workerId: string, amount: number, note?: string)
       payerId: new ObjectId(tipper._id),
       payerName: tipper.name,
       payerImage: tipper.image,
+      payerAlias: tipper.alias,
       amount,
       note,
       date: new Date(),
@@ -89,6 +92,7 @@ export async function submitTip(workerId: string, amount: number, note?: string)
       payeeEmail: tippee.email,
       payeeImage: tippee.image,
       payeeRole: tippee.role,
+      payeeAlias: tippee.alias,
       type: 'tip'
     }
 

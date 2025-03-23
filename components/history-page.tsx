@@ -9,15 +9,16 @@ import { useEffect, useState } from "react"
 
 interface Transaction {
   id: string
-  type: "tip" | "promo" | "received" | "sent"
+  type: "tip" | "promo" | "received" | "sent" | "funding"
   payeeName: string
-  payerName: string
   payeeUsername: string
+  payeeAlias: string
   payerUsername: string
   amount: number
   date: string
   payeeImage: string
   payerImage: string
+  payerAlias: string
   payeeRole: string
 }
 
@@ -41,7 +42,7 @@ export default function HistoryPage({ navigateTo }: { navigateTo: (page: string)
     fetchTransactions()
   }, [])
 
-  const isReceivedTransaction = (type: Transaction["type"]) => type === "promo"
+  const isReceivedTransaction = (type: Transaction["type"]) => type === "promo" || type === "funding"
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -84,7 +85,7 @@ export default function HistoryPage({ navigateTo }: { navigateTo: (page: string)
                         <div>
                           <p className="font-medium">{transaction.type === "promo" ? "Sign Up Promo" : transaction.payeeName}</p>
                           <p className="text-xs text-muted-foreground">
-                            {transaction.payeeRole}
+                            {transaction.payeeAlias}
                           </p>
                         </div>
                         <div className="text-right">

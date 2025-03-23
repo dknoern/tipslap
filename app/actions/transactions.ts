@@ -58,6 +58,8 @@ export async function getTransactions() {
             payeeImage: t.payeeImage,
             payerImage: t.payerImage,
             payeeRole: t.payeeRole,
+            payeeAlias: t.payeeAlias,
+            payerAlias: t.payerAlias,
           }))
 
 
