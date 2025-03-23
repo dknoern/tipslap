@@ -27,6 +27,7 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
   const [searchResults, setSearchResults] = useState<Worker[]>([])
   const [showScanner, setShowScanner] = useState(false)
   const [cameraPermission, setCameraPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt')
+  const [isScannerReady, setIsScannerReady] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -84,6 +85,8 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
         return
       }
 
+      console.log("\n\n\n\nFOUND QR CODE", data, "\n\n\n\n")
+
       // Search for worker by alias
       const response = await fetch(`/api/workers/search?q=${encodeURIComponent(data)}`)
       const results = await response.json()
@@ -108,13 +111,29 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
     }
   }
 
-  const handleError = (error: Error) => {
-    console.error('QR Scanner error:', error)
-    toast({
-      title: "Scanner Error",
-      description: "Failed to access camera. Please check your permissions.",
-      variant: "destructive",
-    })
+  const handleError = (error: Error | null | undefined) => {
+    if (!error) return
+
+    // Only log and show errors that are not related to normal scanning
+    const errorMessage = error.message || error.toString()
+    const isNormalScanningError = 
+      errorMessage.includes('No QR code found') || 
+      errorMessage.includes('selectBestPatterns') ||
+      errorMessage.includes('find') ||
+      errorMessage.includes('detect') ||
+      errorMessage.includes('decode') ||
+      errorMessage === 'e' ||
+      errorMessage.includes('Failed to decode') ||
+      errorMessage.includes('No patterns found')
+
+    if (!isNormalScanningError) {
+      console.error('QR Scanner error:', error)
+      toast({
+        title: "Scanner Error",
+        description: "Failed to access camera. Please check your permissions.",
+        variant: "destructive",
+      })
+    }
   }
 
   const checkCameraPermission = async () => {
@@ -153,6 +172,16 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
       checkCameraPermission()
     }
   }, [showScanner])
+
+  useEffect(() => {
+    if (showScanner && cameraPermission === 'granted') {
+      // Give the scanner a moment to initialize
+      const timer = setTimeout(() => {
+        setIsScannerReady(true)
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [showScanner, cameraPermission])
 
   const renderWorkerList = (workers: Worker[]) => {
     if (loading) {
@@ -256,9 +285,16 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
                   {cameraPermission === 'granted' ? (
                     <>
                       <div className="absolute inset-0">
+                        {!isScannerReady && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black">
+                            <p className="text-sm text-muted-foreground">Initializing camera...</p>
+                          </div>
+                        )}
                         <QrReader
                           constraints={{ facingMode: 'environment' }}
                           onResult={(result, error) => {
+                            console.log(result, error)
+                            console.log("\n\n\n\n TEXT FOUND IS ", result?.getText(), "\n\n\n\n")
                             if (result) {
                               handleScan(result.getText())
                             }
@@ -268,12 +304,16 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
                           }}
                           className="w-full h-full"
                           videoId="qr-video"
+                          scanDelay={500}
                         />
                       </div>
                       <Button
                         variant="outline"
                         className="absolute top-4 right-4 z-10"
-                        onClick={() => setShowScanner(false)}
+                        onClick={() => {
+                          setShowScanner(false)
+                          setIsScannerReady(false)
+                        }}
                       >
                         Close Camera
                       </Button>
