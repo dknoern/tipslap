@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input"
 import { ArrowLeft, QrCode, Search, MapPin } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import debounce from 'lodash/debounce'
+import { QrReader } from 'react-qr-reader'
+import { useToast } from "@/components/ui/use-toast"
 
 interface Worker {
   _id: string
@@ -23,6 +25,8 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
   const [workers, setWorkers] = useState<Worker[]>([])
   const [loading, setLoading] = useState(true)
   const [searchResults, setSearchResults] = useState<Worker[]>([])
+  const [showScanner, setShowScanner] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     const fetchWorkers = async () => {
@@ -64,6 +68,53 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
       searchWorkers.cancel()
     }
   }, [searchQuery, searchWorkers])
+
+  const handleScan = async (data: string | null) => {
+    if (!data) return
+
+    try {
+      // Check if the scanned data is a valid alias (starts with @)
+      if (!data.startsWith('@')) {
+        toast({
+          title: "Invalid QR Code",
+          description: "Please scan a valid service worker QR code",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Search for worker by alias
+      const response = await fetch(`/api/workers/search?q=${encodeURIComponent(data)}`)
+      const results = await response.json()
+
+      if (results.length > 0) {
+        const worker = results[0]
+        navigateTo("tip", worker._id)
+      } else {
+        toast({
+          title: "Worker Not Found",
+          description: "No service worker found with this QR code",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('Error searching worker:', error)
+      toast({
+        title: "Error",
+        description: "Failed to process QR code",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleError = (error: Error) => {
+    console.error('QR Scanner error:', error)
+    toast({
+      title: "Scanner Error",
+      description: "Failed to access camera. Please check your permissions.",
+      variant: "destructive",
+    })
+  }
 
   const renderWorkerList = (workers: Worker[]) => {
     if (loading) {
@@ -162,13 +213,37 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
 
           <TabsContent value="qrcode">
             <div className="space-y-4">
-              <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg">
-                <QrCode className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-sm text-muted-foreground">Scan a service worker's QR code</p>
-                <Button variant="outline" className="mt-4">
-                  Open Camera
-                </Button>
-              </div>
+              {showScanner ? (
+                <div className="relative aspect-square max-w-md mx-auto">
+                  <QrReader
+                    constraints={{ facingMode: 'environment' }}
+                    onResult={(result, error) => {
+                      if (result) {
+                        handleScan(result.getText())
+                      }
+                      if (error) {
+                        handleError(error)
+                      }
+                    }}
+                    className="w-full h-full"
+                  />
+                  <Button
+                    variant="outline"
+                    className="absolute top-4 right-4"
+                    onClick={() => setShowScanner(false)}
+                  >
+                    Close Camera
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg">
+                  <QrCode className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-sm text-muted-foreground">Scan a service worker's QR code</p>
+                  <Button variant="outline" className="mt-4" onClick={() => setShowScanner(true)}>
+                    Open Camera
+                  </Button>
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>
