@@ -15,6 +15,7 @@ interface Worker {
   role: string
   image?: string
   initials?: string
+  alias?: string
 }
 
 export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, workerId?: string) => void }) {
@@ -84,7 +85,7 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
               </Avatar>
               <div className="flex-1">
                 <h3 className="font-medium">{worker.name}</h3>
-                <p className="text-sm text-muted-foreground">{worker.role}</p>
+                <p className="text-sm text-muted-foreground">{worker.alias}</p>
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
                 <MapPin className="h-3 w-3 mr-1" />
