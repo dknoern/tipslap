@@ -3,12 +3,71 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, CreditCard, Plus, Trash2 } from "lucide-react"
+import { useEffect, useState } from "react"
+import { loadStripe } from "@stripe/stripe-js"
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
+import { toast } from "sonner"
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+
+function PaymentForm({ amount, onSuccess }: { amount: number; onSuccess: () => void }) {
+  const stripe = useStripe()
+  const elements = useElements()
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!stripe || !elements) return
+
+    setIsLoading(true)
+    try {
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/payment-success`,
+        },
+      })
+
+      if (error) {
+        toast.error(error.message)
+      } else {
+        onSuccess()
+      }
+    } catch (error) {
+      toast.error("An error occurred during payment")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <PaymentElement />
+      <Button type="submit" className="w-full mt-4" disabled={isLoading}>
+        {isLoading ? "Processing..." : `Pay $${amount}`}
+      </Button>
+    </form>
+  )
+}
 
 export default function PaymentPage({ navigateTo }: { navigateTo: (page: string) => void }) {
-  const paymentMethods = [
-    { id: 1, type: "Visa", last4: "4242", expiry: "04/25" },
-    { id: 2, type: "Mastercard", last4: "5555", expiry: "08/24" },
-  ]
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(null)
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
+
+  const handleAmountSelect = async (amount: number) => {
+    try {
+      const response = await fetch("/api/stripe/create-payment-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount }),
+      })
+      const data = await response.json()
+      setClientSecret(data.clientSecret)
+      setSelectedAmount(amount)
+    } catch (error) {
+      toast.error("Failed to initialize payment")
+    }
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -21,70 +80,69 @@ export default function PaymentPage({ navigateTo }: { navigateTo: (page: string)
         </div>
       </header>
       <main className="flex-1 container px-4 py-6">
-        <h1 className="text-2xl font-bold mb-6 text-center">Payment Methods</h1>
-
-        <Card className="max-w-md mx-auto mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg">Your Cards</CardTitle>
-            <CardDescription>Manage your payment methods</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {paymentMethods.map((method) => (
-              <div key={method.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <CreditCard className="h-5 w-5" />
-                  <div>
-                    <p className="font-medium">
-                      {method.type} •••• {method.last4}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Expires {method.expiry}</p>
-                  </div>
-                </div>
-                <Button variant="ghost" size="icon">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Payment Method
-            </Button>
-          </CardFooter>
-        </Card>
+        <h1 className="text-2xl font-bold mb-6 text-center">Add Funds</h1>
 
         <Card className="max-w-md mx-auto">
           <CardHeader>
-            <CardTitle className="text-lg">Add Funds</CardTitle>
-            <CardDescription>Add money to your TipSlap balance</CardDescription>
+            <CardTitle className="text-lg">Select Amount</CardTitle>
+            <CardDescription>Choose how much to add to your balance</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-2">
-              <Button variant="outline" className="h-16">
-                $5
-              </Button>
-              <Button variant="outline" className="h-16">
-                $10
-              </Button>
-              <Button variant="outline" className="h-16">
-                $20
-              </Button>
-              <Button variant="outline" className="h-16">
-                $50
-              </Button>
-              <Button variant="outline" className="h-16">
-                $100
-              </Button>
-              <Button variant="outline" className="h-16">
+              {[5, 10, 20, 50, 100].map((amount) => (
+                <Button
+                  key={amount}
+                  variant={selectedAmount === amount ? "default" : "outline"}
+                  className="h-16"
+                  onClick={() => handleAmountSelect(amount)}
+                >
+                  ${amount}
+                </Button>
+              ))}
+              <Button
+                variant="outline"
+                className="h-16"
+                onClick={() => {
+                  const amount = prompt("Enter custom amount:")
+                  if (amount && !isNaN(Number(amount))) {
+                    handleAmountSelect(Number(amount))
+                  }
+                }}
+              >
                 Custom
               </Button>
             </div>
           </CardContent>
-          <CardFooter>
-            <Button className="w-full">Add Funds</Button>
-          </CardFooter>
         </Card>
+
+        {clientSecret && selectedAmount && (
+          <Card className="max-w-md mx-auto mt-6">
+            <CardHeader>
+              <CardTitle className="text-lg">Payment Details</CardTitle>
+              <CardDescription>Enter your payment information</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Elements
+                stripe={stripePromise}
+                options={{
+                  clientSecret,
+                  appearance: {
+                    theme: "stripe",
+                  },
+                }}
+              >
+                <PaymentForm
+                  amount={selectedAmount}
+                  onSuccess={() => {
+                    toast.success("Payment successful!")
+                    setSelectedAmount(null)
+                    setClientSecret(null)
+                  }}
+                />
+              </Elements>
+            </CardContent>
+          </Card>
+        )}
       </main>
     </div>
   )
