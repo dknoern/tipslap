@@ -7,6 +7,9 @@ import { useEffect, useState } from "react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { toast } from "sonner"
+import { useSession } from "next-auth/react"
+import { getUserDetails } from "@/app/actions/user"
+
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -53,13 +56,28 @@ function PaymentForm({ amount, onSuccess }: { amount: number; onSuccess: () => v
 export default function PaymentPage({ navigateTo }: { navigateTo: (page: string) => void }) {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const { data: session } = useSession()
 
   const handleAmountSelect = async (amount: number) => {
+    if (!session?.user?.email) {
+      toast.error("Please sign in to add funds")
+      return
+    }
+
     try {
+      const user = await getUserDetails(session.user.email)
+      if (!user?.id) {
+        toast.error("User not found")
+        return
+      }
+
       const response = await fetch("/api/stripe/create-payment-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify({ 
+          amount,
+          userId: user.id 
+        }),
       })
       const data = await response.json()
       setClientSecret(data.clientSecret)

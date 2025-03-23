@@ -7,7 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(req: Request) {
   try {
-    const { amount } = await req.json()
+    const { amount, userId } = await req.json()
 
     // Create a PaymentIntent with the order amount and currency
     const paymentIntent = await stripe.paymentIntents.create({
@@ -16,7 +16,12 @@ export async function POST(req: Request) {
       automatic_payment_methods: {
         enabled: true,
       },
+      metadata: {
+        userId,
+      },
     })
+
+    console.log("------->>>>>> paymentIntent", paymentIntent)
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
