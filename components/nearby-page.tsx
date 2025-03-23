@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { ArrowLeft, QrCode, Search, MapPin } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import debounce from 'lodash/debounce'
 
 interface Worker {
   _id: string
@@ -20,6 +21,7 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
   const [searchQuery, setSearchQuery] = useState("")
   const [workers, setWorkers] = useState<Worker[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchResults, setSearchResults] = useState<Worker[]>([])
 
   useEffect(() => {
     const fetchWorkers = async () => {
@@ -36,6 +38,64 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
 
     fetchWorkers()
   }, [])
+
+  const searchWorkers = useCallback(
+    debounce(async (query: string) => {
+      if (!query.trim()) {
+        setSearchResults([])
+        return
+      }
+
+      try {
+        const response = await fetch(`/api/workers/search?q=${encodeURIComponent(query)}`)
+        const data = await response.json()
+        setSearchResults(data)
+      } catch (error) {
+        console.error('Error searching workers:', error)
+      }
+    }, 300),
+    []
+  )
+
+  useEffect(() => {
+    searchWorkers(searchQuery)
+    return () => {
+      searchWorkers.cancel()
+    }
+  }, [searchQuery, searchWorkers])
+
+  const renderWorkerList = (workers: Worker[]) => {
+    if (loading) {
+      return <p className="text-center text-muted-foreground">Loading workers...</p>
+    }
+
+    if (workers.length === 0) {
+      return <p className="text-center text-muted-foreground">No workers found</p>
+    }
+
+    return workers.map((worker) => (
+      <div key={worker._id} onClick={() => navigateTo("tip", worker._id)}>
+        <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-4">
+              <Avatar>
+                <AvatarImage src={worker.image || "/placeholder.svg?height=40&width=40"} alt={worker.name} />
+                <AvatarFallback>{worker.initials || worker.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <h3 className="font-medium">{worker.name}</h3>
+                <p className="text-sm text-muted-foreground">{worker.role}</p>
+              </div>
+              <div className="flex items-center text-sm text-muted-foreground">
+                <MapPin className="h-3 w-3 mr-1" />
+                Within 50 ft
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    ))
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -75,28 +135,7 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
               ) : workers.length === 0 ? (
                 <p className="text-center text-muted-foreground">No workers found nearby</p>
               ) : (
-                workers.map((worker) => (
-                  <div key={worker._id} onClick={() => navigateTo("tip", worker._id)}>
-                    <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-4">
-                          <Avatar>
-                            <AvatarImage src={worker.image || "/placeholder.svg?height=40&width=40"} alt={worker.name} />
-                            <AvatarFallback>{worker.initials || worker.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <h3 className="font-medium">{worker.name}</h3>
-                            <p className="text-sm text-muted-foreground">{worker.role}</p>
-                          </div>
-                          <div className="flex items-center text-sm text-muted-foreground">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            Within 50 ft
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                ))
+                renderWorkerList(workers)
               )}
             </div>
           </TabsContent>
@@ -114,9 +153,9 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
                 />
               </div>
 
-              <p className="text-sm text-center text-muted-foreground">
-                {searchQuery ? "No results found" : "Enter a name or username to search"}
-              </p>
+              <div className="space-y-4">
+                {renderWorkerList(searchResults)}
+              </div>
             </div>
           </TabsContent>
 
