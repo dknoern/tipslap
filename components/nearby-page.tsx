@@ -214,22 +214,25 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
           <TabsContent value="qrcode">
             <div className="space-y-4">
               {showScanner ? (
-                <div className="relative aspect-square max-w-md mx-auto">
-                  <QrReader
-                    constraints={{ facingMode: 'environment' }}
-                    onResult={(result, error) => {
-                      if (result) {
-                        handleScan(result.getText())
-                      }
-                      if (error) {
-                        handleError(error)
-                      }
-                    }}
-                    className="w-full h-full"
-                  />
+                <div className="relative w-full max-w-md mx-auto aspect-square bg-black rounded-lg overflow-hidden">
+                  <div className="absolute inset-0">
+                    <QrReader
+                      constraints={{ facingMode: 'environment' }}
+                      onResult={(result, error) => {
+                        if (result) {
+                          handleScan(result.getText())
+                        }
+                        if (error) {
+                          handleError(error)
+                        }
+                      }}
+                      className="w-full h-full"
+                      videoId="qr-video"
+                    />
+                  </div>
                   <Button
                     variant="outline"
-                    className="absolute top-4 right-4"
+                    className="absolute top-4 right-4 z-10"
                     onClick={() => setShowScanner(false)}
                   >
                     Close Camera
