@@ -76,10 +76,12 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
     if (!data) return
 
     try {
-      // Check if the scanned data is a valid alias (starts with @)
+      if(!data.startsWith("https://tipslap.com/code/")){
+        return
+      }
 
-      /*
-      if (!data.startsWith('@')) {
+      const alias = data.split("https://tipslap.com/code/")[1]
+      if (!alias) {
         toast({
           title: "Invalid QR Code",
           description: "Please scan a valid service worker QR code",
@@ -87,38 +89,29 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
         })
         return
       }
-        */
 
-      if(!data.startsWith("https://tipslap.com/code/")){
-        return
-      }
-
-
-      const alias = data.split("https://tipslap.com/code/")[1]
-      console.log("\n\n\n\nFOUND QR CODE", alias, "\n\n\n\n")
-      //navigateTo("tip", alias)
-
-      
-      const worker = await getWorkerDetailsByAlias(alias)
-
-      if(!worker){
+      try {
+        const worker = await getWorkerDetailsByAlias(alias)
+        
+        if(!worker){
+          toast({
+            title: "Worker Not Found",
+            description: "No service worker found with this QR code",
+            variant: "destructive",
+          })
+        } else {
+          navigateTo("tip", worker._id.toString())
+        }
+      } catch (actionError) {
+        console.error('Error in Server Action:', actionError)
         toast({
-          title: "Worker Not Found",
-          description: "No service worker found with this QR code",
+          title: "Error",
+          description: "Failed to process QR code. Please try again.",
           variant: "destructive",
         })
-      } else {
-        console.log("\n\n\n\nFOUND WORKER", worker, "\n\n\n\n")
-        navigateTo("tip", worker._id.toString())
       }
- 
-      // Search for worker by alias
-
-
-     
-      
     } catch (error) {
-      console.error('Error searching worker:', error)
+      console.error('Error processing QR code:', error)
       toast({
         title: "Error",
         description: "Failed to process QR code",
