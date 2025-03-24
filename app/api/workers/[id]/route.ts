@@ -13,7 +13,6 @@ export async function GET(
     
     const worker = await users.findOne({ 
       _id: new ObjectId(params.id),
-      type: 'worker'
     })
     
     if (!worker) {
