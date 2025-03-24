@@ -70,4 +70,24 @@ export async function getUserDetails(email: string) {
         role: userDetails.role,
         balance: userDetails.balance,
     }
+
+
+
+
 } 
+
+export async function getWorkerDetailsByAlias(alias: string) {
+    'use server'
+    const client = await clientPromise
+    const db = client.db()
+    const worker = await db.collection('users').findOne({ alias: alias })
+    
+    if (!worker) return null
+
+    // Convert MongoDB document to plain object and ensure _id is a string
+    return {
+        ...worker,
+        _id: worker._id.toString(),
+        joined: worker.joined?.toISOString() // Convert Date to ISO string if it exists
+    }
+}

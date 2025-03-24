@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import debounce from 'lodash/debounce'
 import { QrReader } from 'react-qr-reader'
 import { useToast } from "@/components/ui/use-toast"
+import { getWorkerDetailsByAlias } from "@/app/actions/user"
 
 interface Worker {
   _id: string
@@ -76,6 +77,8 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
 
     try {
       // Check if the scanned data is a valid alias (starts with @)
+
+      /*
       if (!data.startsWith('@')) {
         toast({
           title: "Invalid QR Code",
@@ -84,23 +87,36 @@ export default function NearbyPage({ navigateTo }: { navigateTo: (page: string, 
         })
         return
       }
+        */
 
-      console.log("\n\n\n\nFOUND QR CODE", data, "\n\n\n\n")
+      if(!data.startsWith("https://tipslap.com/code/")){
+        return
+      }
 
-      // Search for worker by alias
-      const response = await fetch(`/api/workers/search?q=${encodeURIComponent(data)}`)
-      const results = await response.json()
 
-      if (results.length > 0) {
-        const worker = results[0]
-        navigateTo("tip", worker._id)
-      } else {
+      const alias = data.split("https://tipslap.com/code/")[1]
+      console.log("\n\n\n\nFOUND QR CODE", alias, "\n\n\n\n")
+      //navigateTo("tip", alias)
+
+      
+      const worker = await getWorkerDetailsByAlias(alias)
+
+      if(!worker){
         toast({
           title: "Worker Not Found",
           description: "No service worker found with this QR code",
           variant: "destructive",
         })
+      } else {
+        console.log("\n\n\n\nFOUND WORKER", worker, "\n\n\n\n")
+        navigateTo("tip", worker._id.toString())
       }
+ 
+      // Search for worker by alias
+
+
+     
+      
     } catch (error) {
       console.error('Error searching worker:', error)
       toast({

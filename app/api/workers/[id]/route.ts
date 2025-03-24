@@ -19,6 +19,8 @@ export async function GET(
     if (!worker) {
       return NextResponse.json({ error: 'Worker not found' }, { status: 404 })
     }
+
+    console.log("\n\n\n\nWORKER FOUND", worker, "\n\n\n\n")
     
     return NextResponse.json(worker)
   } catch (error) {
