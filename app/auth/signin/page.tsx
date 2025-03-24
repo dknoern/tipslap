@@ -29,19 +29,14 @@ export default function SignInPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col items-center justify-center space-y-2">
-                <img src="/placeholder.svg?height=200&width=200" alt="TipSlap Logo" className="h-32 w-32 rounded-full" />
+                <img src="/whale.png?height=200&width=200" alt="TipSlap Logo" className="h-32 w-32 rounded-full" />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-2">
               <Button className="w-full" onClick={() => signIn("google", { callbackUrl })}>
                 Sign in with Google
               </Button>
-              <div className="text-center text-sm">
-                Don't have an account?{" "}
-                <a href="/" className="underline text-primary hover:text-primary/80">
-                  Sign up
-                </a>
-              </div>
+
             </CardFooter>
           </Card>
         </div>
