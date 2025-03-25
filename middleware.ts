@@ -7,8 +7,8 @@ export async function middleware(request: NextRequest) {
 
   // If the user is not logged in and trying to access a protected route
   if (!token && !request.nextUrl.pathname.startsWith("/auth")) {
-    // Allow access to the home page (which will show the splash screen)
-    if (request.nextUrl.pathname === "/") {
+    // Allow access to the home page and code routes
+    if (request.nextUrl.pathname === "/" || request.nextUrl.pathname.startsWith("/code/")) {
       return NextResponse.next()
     }
 
