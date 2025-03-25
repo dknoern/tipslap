@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Inter } from "next/font/google"
 import { ThemeProvider } from "next-themes"
 import { useSession, signOut } from "next-auth/react"
@@ -25,6 +25,18 @@ export default function ClientApp({ initialUser }: { initialUser?: User }) {
 
   const [currentPage, setCurrentPage] = useState("home")
   const [selectedWorkerId, setSelectedWorkerId] = useState<string | null>(null)
+
+  // Handle worker ID in URL when app loads
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search)
+    const workerId = searchParams.get('worker')
+    if (workerId) {
+      setSelectedWorkerId(workerId)
+      setCurrentPage('tip')
+      // Clean up URL
+      window.history.replaceState({}, '', '/')
+    }
+  }, [])
 
   const navigateTo = (page: string, workerId?: string) => {
     setCurrentPage(page)

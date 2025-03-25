@@ -28,6 +28,8 @@ export default function AccountPage({
         .join("")
     : "U"
 
+
+  console.log("account page: NODE_ENV", process.env.NODE_ENV)
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
